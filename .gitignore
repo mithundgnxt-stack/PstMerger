@@ -1,0 +1,24 @@
+# Build outputs
+bin/
+obj/
+
+# IDE files
+.vs/
+*.user
+*.suo
+
+# ConfuserEx files
+ConfuserEx/
+ConfuserEx.zip
+confuser.crproj
+
+# Debug files
+*.pdb
+
+# Log files
+*.log
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
