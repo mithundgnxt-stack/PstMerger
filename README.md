@@ -44,7 +44,13 @@ It was built specifically to handle **large mailboxes (up to 2TB)** and includes
 
 ## Screenshots
 
-*Coming soon*
+![PST Merge Tool Interface](screenshots/pst-merge-tool-ui.png)
+
+## Support & Feedback
+
+**Found a bug?**  
+This project is open source and we welcome your feedback!  
+Please [Submit an Issue](https://github.com/mithundgnxt-stack/PstMerger/issues) if you encounter any problems or have feature ideas.
 
 ## Building from Source
 
