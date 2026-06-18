@@ -24,6 +24,7 @@ It was built specifically to handle **large mailboxes (up to 2TB)** and includes
 - ✅ **Persistent logging** - every action saved to a log file
 - ✅ **Disk space validation** - warns before running out of space
 - ✅ **Error resilience** - continues processing even if individual items fail
+- ✅ **Remove Duplicates** - automatically detects and skips duplicate items across all folders using MD5 fingerprinting (Subject, Sender, Date, Size, Body length). Pre-seeds hashes from an existing destination PST so re-runs never re-import already-merged items. Enabled by default via the "Remove Duplicates" checkbox.
 
 ## Requirements
 
@@ -38,7 +39,8 @@ It was built specifically to handle **large mailboxes (up to 2TB)** and includes
 3. **Click "Fix PST Size Limits"** to remove the 50GB restriction (one-time setup)
 4. **Select source folder** containing your PST files
 5. **Select destination** for the merged PST
-6. **Click "Start Merge"** and wait for completion
+6. **(Optional) Check "Remove Duplicates"** to skip items already present in the destination PST — enabled by default
+7. **Click "Start Merge"** and wait for completion
 
 > ⚠️ **Important**: Close Outlook before running the merge. Do not use the computer for heavy tasks during the merge process.
 
@@ -93,5 +95,9 @@ MIT License - see [LICENSE](LICENSE) file.
 ## Author
 
 **Mithun** 
+
+## Contributor
+
+**Eslam Omar** — Added Remove Duplicates feature
 
 © 2026 All Rights Reserved.

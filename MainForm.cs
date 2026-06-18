@@ -26,9 +26,7 @@ namespace PstMerger
             using (var fbd = new FolderBrowserDialog())
             {
                 if (fbd.ShowDialog() == DialogResult.OK)
-                {
                     txtSourceFolder.Text = fbd.SelectedPath;
-                }
             }
         }
 
@@ -38,9 +36,7 @@ namespace PstMerger
             {
                 sfd.Filter = "Outlook Data File (*.pst)|*.pst";
                 if (sfd.ShowDialog() == DialogResult.OK)
-                {
                     txtDestPst.Text = sfd.FileName;
-                }
             }
         }
 
@@ -49,8 +45,7 @@ namespace PstMerger
             try
             {
                 Log("Applying PST size limit fixes to registry...");
-                
-                // We target Outlook 15.0 and 16.0
+
                 string[] versions = { "15.0", "16.0" };
                 foreach (var v in versions)
                 {
@@ -59,7 +54,6 @@ namespace PstMerger
                     {
                         if (key != null)
                         {
-                            // Values in MB. 2000000 MB = ~2 TB (effectively unlimited)
                             key.SetValue("MaxLargeFileSize", 2000000, RegistryValueKind.DWord);
                             key.SetValue("WarnLargeFileSize", 1900000, RegistryValueKind.DWord);
                         }
@@ -80,6 +74,7 @@ namespace PstMerger
         {
             string sourceDir = txtSourceFolder.Text;
             string destFile = txtDestPst.Text;
+            bool removeDups = chkRemoveDuplicates.Checked;
 
             if (string.IsNullOrEmpty(sourceDir) || !Directory.Exists(sourceDir))
             {
@@ -101,11 +96,14 @@ namespace PstMerger
                 long totalSourceSize = 0;
                 var pstFilesCheck = Directory.GetFiles(sourceDir, "*.pst", SearchOption.TopDirectoryOnly);
                 foreach (var f in pstFilesCheck) totalSourceSize += new FileInfo(f).Length;
-                
-                if (di.AvailableFreeSpace < (totalSourceSize * 1.1)) // 10% buffer
+
+                if (di.AvailableFreeSpace < (totalSourceSize * 1.1))
                 {
-                    var msg = string.Format("Warning: You might not have enough disk space on {0}.\nAvailable: {1} GB\nRequired (est): {2} GB\n\nContinue anyway?", 
-                        drive, di.AvailableFreeSpace / 1024 / 1024 / 1024, (totalSourceSize * 1.1) / 1024 / 1024 / 1024);
+                    var msg = string.Format(
+                        "Warning: You might not have enough disk space on {0}.\nAvailable: {1} GB\nRequired (est): {2} GB\n\nContinue anyway?",
+                        drive,
+                        di.AvailableFreeSpace / 1024 / 1024 / 1024,
+                        (totalSourceSize * 1.1) / 1024 / 1024 / 1024);
                     if (MessageBox.Show(msg, "Disk Space Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
                         return;
                 }
@@ -121,26 +119,28 @@ namespace PstMerger
 
             btnStartMerge.Enabled = false;
             btnFixRegistry.Enabled = false;
+            chkRemoveDuplicates.Enabled = false;
             btnCancel.Visible = true;
             btnCancel.Enabled = true;
             progressBar.Value = 0;
             progressBar.Maximum = pstFiles.Length;
 
-            Log(string.Format("Starting merge of {0} files...", pstFiles.Length));
+            string dupMode = removeDups ? " (Remove Duplicates: ON)" : " (Remove Duplicates: OFF)";
+            Log(string.Format("Starting merge of {0} files...{1}", pstFiles.Length, dupMode));
 
             try
             {
                 _cts = new System.Threading.CancellationTokenSource();
-                await Task.Run(() => 
+                await Task.Run(() =>
                 {
-                    _pstService.MergeFiles(pstFiles, destFile, _cts.Token, (progress, message) => 
-                    {
-                        this.Invoke(new Action(() => 
-                        {
-                            Log(message);
-                            if (progress > 0) progressBar.Value = Math.Min(progress, progressBar.Maximum);
-                        }));
-                    });
+                    _pstService.MergeFiles(pstFiles, destFile, _cts.Token, (progress, message) =>
+            {
+                      this.Invoke(new Action(() =>
+              {
+                        Log(message);
+                        if (progress > 0) progressBar.Value = Math.Min(progress, progressBar.Maximum);
+                    }));
+                  }, removeDups);
                 });
 
                 if (_cts.Token.IsCancellationRequested)
@@ -167,6 +167,7 @@ namespace PstMerger
             {
                 btnStartMerge.Enabled = true;
                 btnFixRegistry.Enabled = true;
+                chkRemoveDuplicates.Enabled = true;
                 btnCancel.Visible = false;
                 if (_cts != null) _cts.Dispose();
             }
@@ -191,8 +192,6 @@ namespace PstMerger
             }
             string line = string.Format("[{0:HH:mm:ss}] {1}", DateTime.Now, message);
             txtLog.AppendText(line + Environment.NewLine);
-            
-            // Persistent File Logging
             try { File.AppendAllText(_logFile, line + Environment.NewLine); } catch { }
         }
 
@@ -203,6 +202,7 @@ namespace PstMerger
 
             string about = string.Format("PST Merge Tool v{0}\n\n", displayVersion) +
                            "Developed by: Mithun\n" +
+                           "Enhanced by: Eslam Omar (ADD REMOVE DUPLICATES)\n" +
                            "© DataGuardNXT 2026\n\n" +
                            "All Rights Reserved.\n\n" +
                            "Enterprise-grade PST merging solution\n" +
@@ -211,3 +211,4 @@ namespace PstMerger
         }
     }
 }
+
